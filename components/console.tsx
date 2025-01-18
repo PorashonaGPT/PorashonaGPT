@@ -37,7 +37,7 @@ export function Console({ artifacts }: ConsoleProps) {
   }
 
   return (
-    <div className="h-64 flex flex-col">
+    <div className="h-full flex flex-col">
       <div className="flex justify-between items-center p-2 border-b">
         <h2 className="text-lg font-semibold">Console</h2>
         <Button variant="ghost" size="icon" onClick={clearConsole}>

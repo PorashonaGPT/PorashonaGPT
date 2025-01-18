@@ -2,10 +2,9 @@
 
 import * as React from 'react'
 import { Artifact } from '@/types/artifact'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Edit, Save } from 'lucide-react'
+import { X } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { useTheme } from 'next-themes'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
@@ -13,77 +12,63 @@ import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/pris
 import Mermaid from './mermaid'
 import { ResponsiveLine } from '@nivo/line'
 import Image from 'next/image'
+import { motion } from 'framer-motion'
 
-interface PreviewProps {
-  artifacts: Artifact[]
-  onUpdateArtifact: (artifact: Artifact) => void
+interface ArtifactWindowProps {
+  artifact: Artifact
+  onClose: () => void
+  onUpdate: (artifact: Artifact) => void
 }
 
-export function Preview({ artifacts, onUpdateArtifact }: PreviewProps) {
-  const [selectedArtifact, setSelectedArtifact] = React.useState<Artifact | null>(null)
+export function ArtifactWindow({ artifact, onClose, onUpdate }: ArtifactWindowProps) {
   const [isEditing, setIsEditing] = React.useState(false)
   const { theme } = useTheme()
-
-  React.useEffect(() => {
-    if (artifacts.length > 0 && !selectedArtifact) {
-      setSelectedArtifact(artifacts[0])
-    }
-  }, [artifacts, selectedArtifact])
 
   const handleEdit = () => {
     setIsEditing(true)
   }
 
   const handleSave = () => {
-    if (selectedArtifact) {
-      onUpdateArtifact(selectedArtifact)
-      setIsEditing(false)
-    }
+    onUpdate(artifact)
+    setIsEditing(false)
   }
 
-  const renderPreview = () => {
-    if (!selectedArtifact) return null
-
+  const renderContent = () => {
     if (isEditing) {
       return (
         <Textarea
-          value={selectedArtifact.content}
-          onChange={(e) => setSelectedArtifact({
-            ...selectedArtifact,
-            content: e.target.value
-          })}
+          value={artifact.content}
+          onChange={(e) => onUpdate({ ...artifact, content: e.target.value })}
           className="w-full h-full font-mono text-sm"
         />
       )
     }
 
-    switch (selectedArtifact.type) {
-      case 'html':
-        return (
-          <iframe
-            srcDoc={selectedArtifact.content}
-            className="w-full h-full border-none"
-            title={selectedArtifact.name}
-          />
-        )
+    switch (artifact.type) {
       case 'code':
         return (
           <SyntaxHighlighter
-            language={selectedArtifact.language || 'javascript'}
+            language={artifact.language || 'javascript'}
             style={theme === 'dark' ? oneDark : oneLight}
             className="text-sm h-full overflow-auto"
             showLineNumbers
           >
-            {selectedArtifact.content}
+            {artifact.content}
           </SyntaxHighlighter>
         )
-      case 'flowchart':
+      case 'html':
         return (
-          <Mermaid chart={selectedArtifact.content} />
+          <iframe
+            srcDoc={artifact.content}
+            className="w-full h-full border-none"
+            title={artifact.name}
+          />
         )
+      case 'flowchart':
+        return <Mermaid chart={artifact.content} />
       case 'dashboard':
         try {
-          const data = JSON.parse(selectedArtifact.content)
+          const data = JSON.parse(artifact.content)
           return (
             <ResponsiveLine
               data={data}
@@ -148,50 +133,38 @@ export function Preview({ artifacts, onUpdateArtifact }: PreviewProps) {
       case 'image':
         return (
           <Image
-            src={selectedArtifact.content || "/placeholder.svg"}
-            alt={selectedArtifact.name}
+            src={artifact.content || "/placeholder.svg"}
+            alt={artifact.name}
             layout="fill"
             objectFit="contain"
           />
         )
       default:
-        return <div className="p-4">Preview not available for this artifact type.</div>
+        return <div>Unsupported artifact type</div>
     }
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex justify-between items-center p-2 border-b">
-        <h2 className="text-lg font-semibold">Preview</h2>
-        <div className="flex items-center space-x-2">
-          <Select
-            value={selectedArtifact?.id}
-            onValueChange={(value) => setSelectedArtifact(artifacts.find(a => a.id === value) || null)}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select an artifact" />
-            </SelectTrigger>
-            <SelectContent>
-              {artifacts.map((artifact) => (
-                <SelectItem key={artifact.id} value={artifact.id}>
-                  {artifact.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={isEditing ? handleSave : handleEdit}
-          >
-            {isEditing ? <Save className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50"
+    >
+      <Card className="w-[600px] h-[400px] overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">
+            {artifact.name}
+          </CardTitle>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            <X className="h-4 w-4" />
           </Button>
-        </div>
-      </div>
-      <ScrollArea className="flex-1">
-        {renderPreview()}
-      </ScrollArea>
-    </div>
+        </CardHeader>
+        <CardContent className="h-[calc(100%-4rem)]">
+          {renderContent()}
+        </CardContent>
+      </Card>
+    </motion.div>
   )
 }
 

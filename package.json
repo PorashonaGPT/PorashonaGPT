@@ -58,12 +58,14 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
     "zod": "^3.24.1",
-    "react-syntax-highlighter": "latest",
-    "framer-motion": "latest",
-    "mongodb": "latest",
-    "react-hotkeys-hook": "latest",
     "uuid": "latest",
-    "cohere-ai": "latest"
+    "framer-motion": "latest",
+    "react-syntax-highlighter": "latest",
+    "cohere-ai": "latest",
+    "mongodb": "latest",
+    "mermaid": "latest",
+    "react-hotkeys-hook": "latest",
+    "@nivo/line": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

@@ -23,16 +23,19 @@ export function useArtifacts() {
       updatedAt: new Date(),
     }
     setArtifacts(prev => [...prev, newArtifact])
+    // TODO: Implement server-side storage and real-time updates for team collaboration
   }
 
   const updateArtifact = (updatedArtifact: Artifact) => {
     setArtifacts(prev => prev.map(a => 
       a.id === updatedArtifact.id ? { ...updatedArtifact, updatedAt: new Date() } : a
     ))
+    // TODO: Implement server-side updates and real-time sync for team collaboration
   }
 
   const deleteArtifact = (id: string) => {
     setArtifacts(prev => prev.filter(a => a.id !== id))
+    // TODO: Implement server-side deletion and real-time sync for team collaboration
   }
 
   const exportArtifacts = () => {

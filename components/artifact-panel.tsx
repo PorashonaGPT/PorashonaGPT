@@ -5,7 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Artifact } from '@/types/artifact'
-import { FileText, Trash2, Download, Search, Code, X, Plus, Filter, SortAsc, SortDesc, Edit, Play } from 'lucide-react'
+import { FileText, Trash2, Download, Search, Code, X, Plus, Filter, SortAsc, SortDesc, Edit, Play, Share2, BarChart2, Image, Maximize2 } from 'lucide-react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { useTheme } from 'next-themes'
@@ -24,6 +24,7 @@ interface ArtifactPanelProps {
   onUpdateArtifact: (artifact: Artifact) => void
   onDeleteArtifact: (id: string) => void
   onExport: () => void
+  onOpenWindow: (id: string) => void
   onClose?: () => void
 }
 
@@ -32,12 +33,13 @@ export function ArtifactPanel({
   onUpdateArtifact,
   onDeleteArtifact,
   onExport,
+  onOpenWindow,
   onClose
 }: ArtifactPanelProps) {
   const [selectedArtifact, setSelectedArtifact] = React.useState<Artifact | null>(null)
   const [searchQuery, setSearchQuery] = React.useState('')
-  const [sortBy, setSortBy] = React.useState<SortOption>('date')
-  const [sortDirection, setSortDirection] = React.useState<SortDirection>('desc')
+  const [sortBy, setSortBy] = React.useState<'name' | 'type' | 'date'>('date')
+  const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('desc')
   const [filterType, setFilterType] = React.useState<string | null>(null)
   const [isEditing, setIsEditing] = React.useState(false)
   const { theme } = useTheme()
@@ -62,7 +64,7 @@ export function ArtifactPanel({
           comparison = a.type.localeCompare(b.type)
           break
         case 'date':
-          comparison = (b.id || '').localeCompare(a.id || '')
+          comparison = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           break
       }
       return sortDirection === 'asc' ? comparison : -comparison
@@ -93,6 +95,23 @@ export function ArtifactPanel({
       } catch (error) {
         console.error('Execution error:', error)
       }
+    }
+  }
+
+  const getArtifactIcon = (type: string) => {
+    switch (type) {
+      case 'code':
+        return <Code className="mr-2 h-4 w-4" />
+      case 'html':
+        return <FileText className="mr-2 h-4 w-4" />
+      case 'flowchart':
+        return <Share2 className="mr-2 h-4 w-4" />
+      case 'dashboard':
+        return <BarChart2 className="mr-2 h-4 w-4" />
+      case 'image':
+        return <Image className="mr-2 h-4 w-4" />
+      default:
+        return <FileText className="mr-2 h-4 w-4" />
     }
   }
 
@@ -184,11 +203,7 @@ export function ArtifactPanel({
                 className="w-full justify-start p-2"
                 onClick={() => setSelectedArtifact(artifact)}
               >
-                {artifact.type === 'html' ? (
-                  <FileText className="mr-2 h-4 w-4" />
-                ) : (
-                  <Code className="mr-2 h-4 w-4" />
-                )}
+                {getArtifactIcon(artifact.type)}
                 <span className="truncate flex-1">{artifact.name}</span>
                 <Badge variant="outline" className="ml-2">
                   {artifact.language || artifact.type}
@@ -204,7 +219,7 @@ export function ArtifactPanel({
             ) : (
               <div className="space-y-2">
                 <p>No artifacts yet.</p>
-                <p className="text-sm">Start a conversation to generate code artifacts.</p>
+                <p className="text-sm">Start a conversation to generate artifacts.</p>
               </div>
             )}
           </div>
@@ -234,6 +249,13 @@ export function ArtifactPanel({
                 ) : (
                   <Edit className="h-4 w-4" />
                 )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onOpenWindow(selectedArtifact.id)}
+              >
+                <Maximize2 className="h-4 w-4" />
               </Button>
               <Button
                 variant="ghost"
